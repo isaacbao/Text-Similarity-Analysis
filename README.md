@@ -1,2 +1,2 @@
 # Text-Similarity-Analysis
-demo to analysis chinese text similarity
+Demo to analysis chinese text similarity
