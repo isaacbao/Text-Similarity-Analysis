@@ -29,6 +29,12 @@ public class Text {
         this.simHash = calculateSimHash(this.eigenvectors);
     }
 
+    public void setOriginText(String originText) {
+        this.originText = originText;
+        this.eigenvectors = calculateEigenvectors();
+        this.simHash = calculateSimHash(this.eigenvectors);
+    }
+
     @Override
     public String toString() {
         return "Text{" +
@@ -82,7 +88,7 @@ public class Text {
     private int getMaxBitCount(List<Eigenvector> eigenvectors) {
         int maxBitCount = 0;
         for (Eigenvector eigenvector : eigenvectors) {
-            int bitCount = Integer.bitCount(eigenvector.getWord().hashCode());
+            int bitCount = Integer.toBinaryString(eigenvector.getWord().hashCode()).length();
             if (bitCount > maxBitCount) {
                 maxBitCount = bitCount;
             }

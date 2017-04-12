@@ -30,10 +30,11 @@ public class Eigenvector {
         int positive = weight;
         Arrays.fill(hashWithWeight, negative);
         int wordHash = word.hashCode();
-        int bitCount = Integer.bitCount(wordHash);
+        String wordHashBitStr = Integer.toBinaryString(wordHash);
+        int bitCount = wordHashBitStr.length();
         for (int index = 0; index < bitCount; index++) {
             int offset = index;
-            boolean bitOfCurrentPosition = (wordHash >> offset) % 2 != 0;
+            boolean bitOfCurrentPosition = Integer.valueOf(wordHashBitStr.charAt(index)) % 2 != 0;
             if (bitOfCurrentPosition) {
                 hashWithWeight[index] = positive;
             }
