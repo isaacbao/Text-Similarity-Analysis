@@ -17,22 +17,25 @@ public class Text {
     //原始文本
     private String originText;
 
-    //原始文本分词后提取的特征变量
+    //原始文本分词后提取的特征向量
     private List<Eigenvector> eigenvectors;
 
     //根据特征变量计算出的simHash值
     private boolean[] simHash;
 
+    //simhash的位数，具体根据hash算法来定，现在用的是java string.hashcode，算出的hashcode是个int，就是32位
+    private static int BIT_COUNT = 32;
+
     public Text(String originText) {
         this.originText = originText;
         this.eigenvectors = calculateEigenvectors();
-        this.simHash = calculateSimHash(this.eigenvectors);
+        this.simHash = calculateSimHash();
     }
 
     public void setOriginText(String originText) {
         this.originText = originText;
         this.eigenvectors = calculateEigenvectors();
-        this.simHash = calculateSimHash(this.eigenvectors);
+        this.simHash = calculateSimHash();
     }
 
     @Override
@@ -67,17 +70,16 @@ public class Text {
         return eigenvectorsTxt;
     }
 
-    private boolean[] calculateSimHash(List<Eigenvector> eigenvectors) {
-        int bitCount = getMaxBitCount(eigenvectors);
-        int[] hashSum = new int[bitCount];
+    private boolean[] calculateSimHash() {
+        int[] hashSum = new int[BIT_COUNT];
         for (Eigenvector eigenvector : eigenvectors) {
-            int[] hashWithWeight = eigenvector.calculateHashWithWeight(bitCount);
-            for (int i = 0; i < bitCount; i++) {
+            int[] hashWithWeight = eigenvector.calculateHashWithWeight(BIT_COUNT);
+            for (int i = 0; i < BIT_COUNT; i++) {
                 hashSum[i] += hashWithWeight[i];
             }
         }
-        boolean[] simHash = new boolean[bitCount];
-        for (int i = 0; i < bitCount; i++) {
+        boolean[] simHash = new boolean[BIT_COUNT];
+        for (int i = 0; i < BIT_COUNT; i++) {
             if (hashSum[i] > 0) {
                 simHash[i] = true;
             }
@@ -85,34 +87,16 @@ public class Text {
         return simHash;
     }
 
-    private int getMaxBitCount(List<Eigenvector> eigenvectors) {
-        int maxBitCount = 0;
-        for (Eigenvector eigenvector : eigenvectors) {
-            int bitCount = Integer.toBinaryString(eigenvector.getWord().hashCode()).length();
-            if (bitCount > maxBitCount) {
-                maxBitCount = bitCount;
-            }
-        }
-        return maxBitCount;
-    }
-
     /**
      * 计算该文本的sim hash和另一个文本的sim hash的hamming distance
      *
-     * @return
      */
     public int calculateHammingDistance(Text text) {
         boolean[] thisSimHash = this.simHash;
         boolean[] thatSimHash = text.simHash;
 
-        if (thisSimHash.length > thatSimHash.length) {
-            thatSimHash = ArrayUtil.expandTo(thatSimHash, thisSimHash.length);
-        } else {
-            this.simHash = ArrayUtil.expandTo(thisSimHash, thatSimHash.length);
-        }
-        int length = thisSimHash.length;
         int hammingDistance = 0;
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < BIT_COUNT; i++) {
             if (thisSimHash[i] != thatSimHash[i]) {
                 hammingDistance++;
             }
