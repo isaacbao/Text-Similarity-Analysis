@@ -1,17 +1,21 @@
 package bean;
 
+import enums.EigervectorAlgorithm;
+
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * 特征变量，描述一个词在句子中的权重
  * Created by rongyang_lu on 2017/4/6.
  */
 public class Eigenvector {
+
     //词语
     private String word;
     //权重
     private int weight;
+    //一个词语在一篇文章中的出现频率
+    private int frequency;
 
 //    private List<Integer> hashWithWeight;
 
@@ -46,43 +50,18 @@ public class Eigenvector {
         return word;
     }
 
-//    public void setWord(String word) {
-//        this.word = word;
-//    }
+    public void frequercyUp() {
+        this.frequency++;
+    }
 
-    public Eigenvector(int weight, String word) {
-        this.weight = weight;
+    public void calculateWeight(EigervectorAlgorithm algorithm){
+
+    }
+
+    public Eigenvector(int frequency, String word) {
+        this.frequency = frequency;
         this.word = word;
-//        this.hashWithWeight = word.hashCode() * weight;
-    }
-
-    /**
-     * 往列表当中添加特征向量，特征向量权重按照词语的出现频率计算
-     */
-    public static void addListWeightByFrequency(List<Eigenvector> list, Eigenvector eigenvector) {
-        int index = list.indexOf(eigenvector);
-        if (index > 0) {
-            Eigenvector existEigenvector = list.get(index);
-            int weight = existEigenvector.getWeight();
-            if (weight < 5) {
-                existEigenvector.setWeight(weight + 1);
-            } else {
-                existEigenvector.setWeight(5);
-            }
-        } else {
-            list.add(eigenvector);
-        }
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Eigenvector that = (Eigenvector) o;
-
-        return word.equals(that.word);
-
+        this.weight = 1;
     }
 
     @Override

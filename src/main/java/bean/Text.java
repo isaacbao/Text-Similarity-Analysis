@@ -1,19 +1,18 @@
 package bean;
 
-import org.wltea.analyzer.IKSegmentation;
-import org.wltea.analyzer.Lexeme;
-import util.ArrayUtil;
+import util.WordSegmentation;
 
-import java.io.IOException;
-import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 要分析相似度的文本
  * Created by rongyang_lu on 2017/4/7.
  */
 public class Text {
+
     //原始文本
     private String originText;
 
@@ -46,6 +45,10 @@ public class Text {
                 '}';
     }
 
+    public boolean[] getSimHash() {
+        return simHash;
+    }
+
     public List<Eigenvector> getEigenvectors() {
         return eigenvectors;
     }
@@ -55,19 +58,33 @@ public class Text {
     }
 
     public List<Eigenvector> calculateEigenvectors() {
-        List<Eigenvector> eigenvectorsTxt = new ArrayList<>();
-        IKSegmentation ikSeg = new IKSegmentation(new StringReader(originText), true);
-        Lexeme l = null;
-        try {
-            while ((l = ikSeg.next()) != null) {
-                String word = l.getLexemeText();
-                Eigenvector eigenvector = new Eigenvector(1, word);
-                Eigenvector.addListWeightByFrequency(eigenvectorsTxt, eigenvector);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        List<String> wordsInDoc = splitWords();
+        List<Eigenvector> eigenvectorsTxt = calculateFrequency(wordsInDoc);
         return eigenvectorsTxt;
+    }
+
+    /**
+     * 统计词频
+     */
+    private List<Eigenvector> calculateFrequency(List<String> wordsInDoc) {
+        Map<String, Eigenvector> eigenvectorsTxt = new HashMap<>();
+        wordsInDoc.forEach(word -> {
+            Eigenvector eigenvector = eigenvectorsTxt.get(word);
+            if (eigenvector == null) {
+                eigenvectorsTxt.put(word,new Eigenvector(1,word));
+            }else{
+                eigenvector.frequercyUp();
+            }
+        });
+        List<Eigenvector> result = new ArrayList<>();
+        eigenvectorsTxt.forEach((word,eigenvectors)->{
+            result.add(eigenvectors);
+        });
+        return result;
+    }
+
+    private List<String> splitWords() {
+        return WordSegmentation.splitWords(this.originText);
     }
 
     private boolean[] calculateSimHash() {
@@ -89,18 +106,61 @@ public class Text {
 
     /**
      * 计算该文本的sim hash和另一个文本的sim hash的hamming distance
-     *
      */
     public int calculateHammingDistance(Text text) {
-        boolean[] thisSimHash = this.simHash;
-        boolean[] thatSimHash = text.simHash;
+        return calculateHammingDistance(this, text);
+    }
 
+    /**
+     * 计算该文本的sim hash和另一个文本的sim hash的hamming distance
+     */
+    public static int calculateHammingDistance(Text text1, Text text2) {
+        boolean[] text1SimHash = text1.getSimHash();
+        boolean[] text2SimHash = text2.getSimHash();
+
+        return calculateHammingDistance(text1SimHash, text2SimHash);
+    }
+
+    /**
+     * 计算该文本的sim hash和另一个文本的sim hash的hamming distance
+     */
+    public static int calculateHammingDistance(boolean[] simHash1, boolean[] simHash2) {
         int hammingDistance = 0;
         for (int i = 0; i < BIT_COUNT; i++) {
-            if (thisSimHash[i] != thatSimHash[i]) {
+            if (simHash1[i] != simHash2[i]) {
                 hammingDistance++;
             }
         }
         return hammingDistance;
+    }
+
+    public static String simHashBooleanToString(boolean[] booleanArray) {
+        if (booleanArray.length != BIT_COUNT) {
+            throw new IllegalArgumentException("要转换的simHash位数不是" + BIT_COUNT + "位");
+        }
+        StringBuilder sb = new StringBuilder();
+        for (boolean b : booleanArray) {
+            if (b) {
+                sb.append('1');
+            } else {
+                sb.append('0');
+            }
+        }
+        return sb.toString();
+    }
+
+    public static boolean[] simHashStringToBoolean(String string) {
+        if (!string.matches("[01]{" + BIT_COUNT + "}")) {
+            throw new IllegalArgumentException("要转换的simHash位数不是" + BIT_COUNT + "位");
+        }
+        char[] chars = string.toCharArray();
+        boolean[] result = new boolean[BIT_COUNT];
+        for (int i = 0; i < BIT_COUNT; i++) {
+            char c = chars[i];
+            if (c == '1') {
+                result[i] = true;
+            }
+        }
+        return result;
     }
 }
